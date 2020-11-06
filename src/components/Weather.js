@@ -2,36 +2,23 @@ import React, { useReducer, useEffect } from "react";
 
 const CITY_NAME = "Tokyo";
 const API_KEY = process.env.REACT_APP_WEATHER_API_KEY;
-const API_URL = `https://api.openweathermap.org/data/2.5/weather?q=${CITY_NAME},jp&APPID=${API_KEY}&units=metric`;
+const LAT = process.env.REACT_APP_LAT;
+const LON = process.env.REACT_APP_LON;
+const API_URL = `https://api.openweathermap.org/data/2.5/onecall?lat=${LAT}&lon=${LON}&APPID=${API_KEY}&units=metric&exclude=minutely,hourly,daily`;
 
 const initialState = {
   loading: true,
   message: "",
-  weather: [],
-  main: {},
 };
 
 const reducer = (state, action) => {
   switch (action.type) {
     case "REQUEST":
-      return {
-        ...state,
-        loading: true,
-        message: "",
-      };
-    case "SUCCESS":
-      return {
-        ...state,
-        loading: false,
-        weather: action.weather,
-        main: action.main,
-      };
-    case "FAILURE":
-      return {
-        ...state,
-        loading: false,
-        message: action.message,
-      };
+      return { ...initialState };
+    case "VIEW":
+      return { loading: false, ...action };
+    case "ERROR":
+      return { loading: false };
     default:
       return state;
   }
@@ -39,22 +26,19 @@ const reducer = (state, action) => {
 
 const Weather = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
+  console.log(API_URL);
 
   useEffect(() => {
     dispatch({ type: "REQUEST" });
 
     fetch(API_URL)
       .then((response) => response.json())
-      .then((jsonResponse) => {
-        dispatch({
-          type: jsonResponse.cod === 200 ? "SUCCESS" : "FAILURE",
-          ...jsonResponse,
-        });
-      });
+      .then((jsonResponse) => dispatch({ type: "VIEW", ...jsonResponse }))
+      .catch((error) => dispatch({ type: "ERROR" }));
   }, []);
 
-  const { loading, weather, main, message } = state;
-  // console.log(weather, main, wind, clouds);
+  const { loading, current, message } = state;
+  // console.log(state);
 
   return (
     <div>
@@ -63,20 +47,26 @@ const Weather = () => {
         <div>loading...</div>
       ) : message ? (
         <div>{message}</div>
-      ) : (
+      ) : current.weather ? (
         <div>
-          <div>
-            <img
-              src={`https://openweathermap.org/img/wn/${weather[0].icon}@2x.png`}
-              alt={weather[0].description}
-              className="mx-auto"
-            />
-            <h3>{weather[0].main}</h3>
-          </div>
-          <div>
-            {main.temp_max}℃ - {main.temp_min}℃
-          </div>
+          {current.weather.map((weather) => (
+            <div>
+              <img
+                src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
+                alt={weather.description}
+                className="mx-auto"
+              />
+              <h3>{weather.main}</h3>
+            </div>
+          ))}
+          <div>{current.temp}℃</div>
+          <div>feels like {current.feels_like}℃</div>
+          <div>pressure {current.pressure} hPa</div>
+          <div>humidity {current.humidity} %</div>
+          <div>clouds {current.clouds} %</div>
         </div>
+      ) : (
+        <div>Something wrong...</div>
       )}
     </div>
   );
