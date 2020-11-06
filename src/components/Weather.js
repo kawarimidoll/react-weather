@@ -31,6 +31,7 @@ const Weather = () => {
             <img
               src={`https://openweathermap.org/img/wn/${weather[0].icon}@2x.png`}
               alt={weather[0].description}
+              className="mx-auto"
             />
             <h3>{weather[0].main}</h3>
           </div>
