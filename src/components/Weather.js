@@ -40,6 +40,12 @@ const Weather = () => {
   const { loading, current, message } = state;
   // console.log(state);
 
+  const getTime = (unixTime) => {
+    const time = new Date(unixTime * 1000);
+    const padZero = (num) => `${num > 10 ? "" : "0"}${num}`;
+    return `${padZero(time.getHours())}:${padZero(time.getMinutes())}`;
+  };
+
   return (
     <div>
       <h2>{CITY_NAME}</h2>
@@ -64,6 +70,8 @@ const Weather = () => {
           <div>pressure {current.pressure} hPa</div>
           <div>humidity {current.humidity} %</div>
           <div>clouds {current.clouds} %</div>
+          <div>sunrise {getTime(current.sunrise)}</div>
+          <div>sunset {getTime(current.sunset)}</div>
         </div>
       ) : (
         <div>Something wrong...</div>
