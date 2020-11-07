@@ -40,6 +40,15 @@ const Weather = () => {
   const { loading, current, message } = state;
   // console.log(state);
 
+  const getIcon = (weather, sunrise, sunset) => {
+    const now = new Date();
+    const iconId =
+      new Date(sunrise * 1000) < now && now < new Date(sunset * 1000)
+        ? weather.icon.replace("n", "d")
+        : weather.icon.replace("d", "n");
+    return `https://openweathermap.org/img/wn/${iconId}@2x.png`;
+  };
+
   const getTime = (unixTime) => {
     const time = new Date(unixTime * 1000);
     const padZero = (num) => `${num > 10 ? "" : "0"}${num}`;
@@ -58,7 +67,7 @@ const Weather = () => {
           {current.weather.map((weather, index) => (
             <div key={`weather-${index}`}>
               <img
-                src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
+                src={getIcon(weather, current.sunrise, current.sunset)}
                 alt={weather.description}
                 className="mx-auto"
               />
