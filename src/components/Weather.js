@@ -26,7 +26,7 @@ const reducer = (state, action) => {
 
 const Weather = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
-  console.log(API_URL);
+  // console.log(API_URL);
 
   useEffect(() => {
     dispatch({ type: "REQUEST" });
@@ -34,20 +34,19 @@ const Weather = () => {
     fetch(API_URL)
       .then((response) => response.json())
       .then((jsonResponse) => dispatch({ type: "VIEW", ...jsonResponse }))
-      .catch((error) => dispatch({ type: "ERROR" }));
+      .catch((error) => {
+        dispatch({ type: "ERROR" });
+        console.error(error);
+      });
   }, []);
 
   const { loading, current, message } = state;
   // console.log(state);
 
-  const getIcon = (weather, sunrise, sunset) => {
-    const now = new Date();
-    const iconId =
-      new Date(sunrise * 1000) < now && now < new Date(sunset * 1000)
-        ? weather.icon.replace("n", "d")
-        : weather.icon.replace("d", "n");
-    return `https://openweathermap.org/img/wn/${iconId}@2x.png`;
-  };
+  const getIcon = (icon, dt, sunrise, sunset) =>
+    `https://openweathermap.org/img/wn/${icon.slice(0, -1)}${
+      sunrise < dt && dt < sunset ? "d" : "n"
+    }@2x.png`;
 
   const getTime = (unixTime) => {
     const time = new Date(unixTime * 1000);
@@ -64,16 +63,22 @@ const Weather = () => {
         <div>{message}</div>
       ) : current.weather ? (
         <div>
-          {current.weather.map((weather, index) => (
-            <div key={`weather-${index}`}>
-              <img
-                src={getIcon(weather, current.sunrise, current.sunset)}
-                alt={weather.description}
-                className="mx-auto"
-              />
-              <h3>{weather.main}</h3>
-            </div>
-          ))}
+          <div className="flex justify-center">
+            {current.weather.map((weather, index) => (
+              <div key={`weather-${index}`}>
+                <img
+                  src={getIcon(
+                    weather.icon,
+                    current.dt,
+                    current.sunrise,
+                    current.sunset
+                  )}
+                  alt={weather.description}
+                />
+                <h3>{weather.main}</h3>
+              </div>
+            ))}
+          </div>
           <div>{current.temp}℃</div>
           <div>feels like {current.feels_like}℃</div>
           <div>pressure {current.pressure} hPa</div>
