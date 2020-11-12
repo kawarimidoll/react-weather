@@ -6,25 +6,57 @@ const LAT = process.env.REACT_APP_LAT;
 const LON = process.env.REACT_APP_LON;
 const API_URL = `https://api.openweathermap.org/data/2.5/onecall?lat=${LAT}&lon=${LON}&APPID=${API_KEY}&units=metric&exclude=minutely,hourly,daily`;
 
-const initialState = {
+interface WeatherData {
+  id: number;
+  main: string;
+  description: string;
+  icon: string;
+}
+interface Current {
+  dt: number;
+  sunrise: number;
+  sunset: number;
+  temp: number;
+  feels_like: number;
+  pressure: number;
+  humidity: number;
+  dew_point: number;
+  clouds: number;
+  uvi: number;
+  visibillity: number;
+  wind_speed: number;
+  wind_deg: number;
+  weather: WeatherData[];
+}
+interface State {
+  loading: boolean;
+  message?: string;
+  current?: Current;
+}
+interface Action {
+  type: string;
+  message?: string;
+  current?: Current;
+}
+
+const initialState: State = {
   loading: true,
-  message: "",
 };
 
-const reducer = (state, action) => {
+const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "REQUEST":
-      return { ...initialState };
+      return initialState;
     case "VIEW":
       return { loading: false, ...action };
     case "ERROR":
-      return { loading: false };
+      return { loading: false};
     default:
       return state;
   }
 };
 
-const Weather = () => {
+const Weather: React.FC = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   // console.log(API_URL);
 
@@ -43,14 +75,19 @@ const Weather = () => {
   const { loading, current, message } = state;
   // console.log(state);
 
-  const getIcon = (icon, dt, sunrise, sunset) =>
+  const getIcon = (
+    icon: string,
+    dt: number,
+    sunrise: number,
+    sunset: number
+  ): string =>
     `https://openweathermap.org/img/wn/${icon.slice(0, -1)}${
       sunrise < dt && dt < sunset ? "d" : "n"
     }@2x.png`;
 
-  const getTime = (unixTime) => {
-    const time = new Date(unixTime * 1000);
-    const padZero = (num) => `${num > 10 ? "" : "0"}${num}`;
+  const getTime = (unixTime: number): string => {
+    const time: Date = new Date(unixTime * 1000);
+    const padZero = (num: number): string => `${num < 10 ? "0" : ""}${num}`;
     return `${padZero(time.getHours())}:${padZero(time.getMinutes())}`;
   };
 
@@ -61,10 +98,10 @@ const Weather = () => {
         <div>loading...</div>
       ) : message ? (
         <div>{message}</div>
-      ) : current.weather ? (
+      ) : current && current.weather ? (
         <div>
           <div className="flex justify-center">
-            {current.weather.map((weather, index) => (
+            {current.weather.map((weather: WeatherData, index: number) => (
               <div key={`weather-${index}`}>
                 <img
                   src={getIcon(
